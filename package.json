@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/emersion/node-clementine-server",
   "dependencies": {
+    "clementine-remote": "^0.2.0",
     "lame": "^1.1.1",
     "speaker": "^0.2.1",
     "taglib": "^0.8.1"

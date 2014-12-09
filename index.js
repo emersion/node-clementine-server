@@ -36,7 +36,7 @@ var scan = function (dir, done) {
 		for (var i = 0; i < list.length; i++) {
 			var path = list[i];
 			
-			if (path.substr(-4) != '.mp3') {
+			if (path.substr(-4) != '.mp3') { // TODO: support other formats too
 				continue;
 			}
 			results.push(path);
