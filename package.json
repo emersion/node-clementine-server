@@ -24,9 +24,12 @@
   "homepage": "https://github.com/emersion/node-clementine-server",
   "dependencies": {
     "clementine-remote": "^0.2.0",
+    "fluent-ffmpeg": "^2.0.0-rc3",
     "lame": "^1.1.1",
+    "music-library-index": "^1.3.0",
     "pcm-volume": "0.0.1",
     "speaker": "^0.2.1",
-    "taglib": "^0.8.1"
+    "taglib": "^0.8.1",
+    "ytdl-core": "^0.2.4"
   }
 }
