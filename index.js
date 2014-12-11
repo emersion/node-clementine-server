@@ -63,6 +63,17 @@ Library.defaultMusicDir(function (err, dirpath) {
 		if (err) return console.error('ERR: could not scan music directory', err);
 		console.log('Library loaded.');
 
+		library.eachTrack(function (track, key) {
+			// TODO: wait for the DB to be ready
+			// TODO: add more info
+			server.library.addSong({
+				title: track.name,
+				album: track.albumName,
+				artist: track.artistName,
+				filename: 'file://'+track.key
+			});
+		});
+
 		server.on('playpause', function () {
 			if (!player.opened) {
 				var index = Math.ceil(Math.random() * results.length);
@@ -97,7 +108,7 @@ Library.defaultMusicDir(function (err, dirpath) {
 						id: 0,
 						index: 0,
 						title: tag.title || path.basename(file),
-						filename: path.basename(file), //TODO: absolute path? Relative to music dir
+						filename: file,
 						is_local: true,
 						length: audioProperties.length
 					};
@@ -127,6 +138,10 @@ Library.defaultMusicDir(function (err, dirpath) {
 				player.playpause();
 			}
 		});
+
+		server.on('insert_urls', function (req) {
+			console.log('insert_urls', req); //TODO: play media
+		});
 	});
 });
 
@@ -137,4 +152,9 @@ server.on('volume', function (value) {
 
 	console.log('set volume', value / 100);
 	player.setVolume(value / 100);
+});
+
+server.on('connection', function (conn) {
+	// TODO: these functions will be integrated in clementine-remote module directly
+	/*conn.on('request_playlists', function () {});*/
 });
