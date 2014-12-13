@@ -9,6 +9,7 @@ var mdns = require('mdns');
 
 var Library = require('./lib/library');
 var Player = require('./lib/player');
+var Playlist = require('./lib/playlist');
 
 var position = 0, positionInterval;
 var startSendingPosition = function () {
@@ -52,26 +53,9 @@ Library.Local.defaultMusicDir(function (err, dirpath) {
 	var ytLib = Library.Youtube.Channel('UCyC_4jvPzLiSkJkLIkA7B8g');
 	var library = Library.Aggregator([localLib, ytLib]);
 
-	var play = function (url) {
-		// On new client:
-		//INFO
-		//CURRENT_METAINFO
-		//SET_VOLUME
-		//UPDATE_TRACK_POSITION
-		//PLAYLISTS
-		//PLAYLIST_SONGS
-		//REPEAT
-		//SHUFFLE
-		//FIRST_DATA_SENT_COMPLETE
+	var playlist = Playlist(player, library);
 
-		// On play:
-		//ACTIVE_PLAYLIST_CHANGED
-		//CURRENT_METAINFO
-		//PLAY
-		//UPDATE_TRACK_POSITION
-		//STOP
-
-		var track = library.getTrack(url);
+	var formatTrackMetadata = function (track) {
 		var metadata = {
 			id: 0,
 			index: 0,
@@ -100,14 +84,41 @@ Library.Local.defaultMusicDir(function (err, dirpath) {
 		if (track.year > 0) {
 			metadata.pretty_year = String(track.year);
 		}
+		if (track.picture) {
+			metadata.art = track.picture.data;
+		}
 		//TODO: pretty_length, art, file_size, rating
-		server.song = metadata;
+		return metadata;
+	};
 
-		console.log('Now playing:', metadata);
+	player.on('open', function () {
+		var track = playlist.currentTrack();
+		library.metadata(track.key, function (err, metadata) {
+			if (err) console.warn('WARN: could not read track metadata', err);
+			server.song = formatTrackMetadata(metadata || track);
+			console.log('Now playing:', server.song);
+		});
+	});
 
-		var stream = library.open(url);
-		player.open(stream);
-		player.play();
+	playlist.on('update', function () {
+		var tracks = playlist.listTracks();
+		var list = [];
+		for (var i = 0; i < tracks.length; i++) {
+			list.push(formatTrackMetadata(tracks[i]));
+		}
+		server.playlist.setSongs(list);
+	});
+
+	var play = function (url) {
+		// On play:
+		//ACTIVE_PLAYLIST_CHANGED
+		//CURRENT_METAINFO
+		//PLAY
+		//UPDATE_TRACK_POSITION
+		//STOP
+
+		playlist.addTrack(url);
+		playlist.play();
 	};
 
 	library.scan(function (err) {
@@ -137,15 +148,25 @@ Library.Local.defaultMusicDir(function (err, dirpath) {
 			}
 		});
 
+		server.on('next', function () {
+			playlist.next();
+		});
+		server.on('previous', function () {
+			playlist.previous();
+		});
+
 		server.on('insert_urls', function (req) {
 			// TODO: playlists support
 			console.log('insert_urls', req);
 
-			var file = req.urls[0];
-			play(file);
+			for (var i = 0; i < req.urls.length; i++) {
+				playlist.addTrack(req.urls[i]);
+			}
+			playlist.play();
 		});
 
-		player.on('end', function () {
+		playlist.on('end', function () {
+			console.log('Playlist ended!');
 			playRandom();
 		});
 	});
