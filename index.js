@@ -44,8 +44,9 @@ Library.Local.defaultMusicDir(function (err, dirpath) {
 	console.log('Music dir:', dirpath);
 
 	var localLib = Library.Local(dirpath);
-	var ytLib = Library.Youtube.Channel('UCyC_4jvPzLiSkJkLIkA7B8g');
-	var library = Library.Aggregator([localLib, ytLib]);
+	var ytLib = Library.open('https://www.youtube.com/channel/UCyC_4jvPzLiSkJkLIkA7B8g');
+	var scLib = Library.open('https://soundcloud.com/noflipe');
+	var library = Library.Aggregator([localLib, ytLib, scLib]);
 
 	var playlist = Playlist(player, library);
 
