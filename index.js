@@ -1,10 +1,4 @@
-var fs = require('fs');
-var path = require('path');
 var ClementineServer = require('clementine-remote').Server;
-var lame = require('lame');
-var Speaker = require('speaker');
-var Volume = require('pcm-volume');
-var taglib = require('taglib');
 var mdns = require('mdns');
 
 var Library = require('./lib/library');
