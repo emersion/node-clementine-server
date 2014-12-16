@@ -197,11 +197,6 @@ server.on('volume', function (value) {
 	player.setVolume(value / 100);
 });
 
-server.on('connection', function (conn) {
-	// TODO: these functions will be integrated in clementine-remote module directly
-	/*conn.on('request_playlists', function () {});*/
-});
-
 server.on('listening', function () {
 	var ad = mdns.createAdvertisement(mdns.tcp('clementine'), server.address().port, {
 		domain: 'local'
