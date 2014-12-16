@@ -1,6 +1,7 @@
 var ClementineServer = require('clementine-remote').Server;
 var mdns = require('mdns');
 
+var config = require('./config');
 var Library = require('./lib/library');
 var Player = require('./lib/player');
 var Playlist = require('./lib/playlist');
@@ -40,14 +41,31 @@ player.on('volume', function (value) {
 	server.volume = value * 100;
 });
 
-Library.Local.defaultMusicDir(function (err, dirpath) {
-	console.log('Music dir:', dirpath);
+Library.Local.defaultMusicDir(function (err, defaultDir) {
+	var libConfigList = config.libraries || [];
+	var libs = [];
+	for (var i = 0; i < libConfigList.length; i++) {
+		var libConfig = libConfigList[i];
 
-	var localLib = Library.Local(dirpath);
-	var ytLib = Library.open('https://www.youtube.com/channel/UCyC_4jvPzLiSkJkLIkA7B8g');
-	var scLib = Library.open('https://soundcloud.com/noflipe');
-	var library = Library.Aggregator([localLib, ytLib, scLib]);
+		var lib;
+		if (typeof libConfig == 'string') {
+			lib = Library.open(libConfig);
+		} else {
+			switch (libConfig.type) {
+				case 'local':
+					lib = Library.Local(libConfig.dir || defaultDir);
+					break;
+			}
+		}
 
+		if (!lib) {
+			console.warn('WARN: could not load library', libConfig);
+		} else {
+			libs.push(lib);
+		}
+	}
+
+	var library = Library.Aggregator(libs);
 	var playlist = Playlist(player, library);
 
 	var formatTrackMetadata = function (track) {
@@ -82,7 +100,10 @@ Library.Local.defaultMusicDir(function (err, dirpath) {
 		if (track.picture) {
 			metadata.art = track.picture.data;
 		}
-		//TODO: pretty_length, art, file_size, rating
+		if (track.fileSize) {
+			metadata.file_size = track.fileSize;
+		}
+		//TODO: pretty_length, rating
 		return metadata;
 	};
 
@@ -117,7 +138,7 @@ Library.Local.defaultMusicDir(function (err, dirpath) {
 	};
 
 	library.scan(function (err) {
-		if (err) return console.error('ERR: could not scan music directory', err);
+		if (err) return console.error('ERR: could not scan music library', err);
 
 		library.eachTrack(function (track, key) {
 			// TODO: wait for the DB to be ready
