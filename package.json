@@ -30,6 +30,7 @@
     "musicmetadata": "^0.6.1",
     "pcm-volume": "0.0.1",
     "request": "^2.51.0",
+    "soundcloud-api": "^0.1.1",
     "speaker": "^0.2.1",
     "taglib": "^0.8.1",
     "youtube-api": "^0.3.2",
