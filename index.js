@@ -1,5 +1,11 @@
 var ClementineServer = require('clementine-remote').Server;
-var mdns = require('mdns');
+
+var mdns;
+try {
+	mdns = require('mdns');
+} catch (e) {
+	console.error('Could not find MDNS module', e);
+}
 
 var config = require('./config');
 var Library = require('./lib/library');
@@ -198,11 +204,13 @@ server.on('volume', function (value) {
 });
 
 server.on('listening', function () {
-	var ad = mdns.createAdvertisement(mdns.tcp('clementine'), server.address().port, {
-		domain: 'local'
-	}, function (err, opts) {
-		if (err) return console.warn('WARN: could not start MDNS service', err);
-		console.log('MDNS service started.');
-	});
-	ad.start();
+	if (mdns) {
+		var ad = mdns.createAdvertisement(mdns.tcp('clementine'), server.address().port, {
+			domain: 'local'
+		}, function (err, opts) {
+			if (err) return console.warn('WARN: could not start MDNS service', err);
+			console.log('MDNS service started.');
+		});
+		ad.start();
+	}
 });
